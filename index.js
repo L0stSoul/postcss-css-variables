@@ -14,9 +14,11 @@ var utils = require('./lib/utils');
 var resolveDecl = require('./lib/resolve-decl');
 var resolveValue = require('./lib/resolve-value');
 var collectVarsDeclarations = require('./lib/collect-vars-declarations');
+var collectRulesThatUsesDeclarations = require('./lib/collect-rules-that-uses-declarations');
 
 var defaults = {
-    preserve: false
+    preserve: false,
+    extraVarsDeclaration: ''
 };
 
 module.exports = postcss.plugin('postcss-css-variables', function(options) {
@@ -24,35 +26,13 @@ module.exports = postcss.plugin('postcss-css-variables', function(options) {
 });
 
 function transformAST(options, ast, result) {
-    // Map of variable names to a list of declarations
-    var customVarsDeclarations = collectVarsDeclarations(options, ast);
+    var customVarsDeclarations = _.assign(
+            collectVarsDeclarations(options, postcss.parse(options.extraVarsDeclaration)),
+            collectVarsDeclarations(options, ast)
+        );
+    var rulesThatUsesDeclarationsList = collectRulesThatUsesDeclarations(ast);
 
-    // Resolve variables everywhere
-    // ---------------------------------------------------------
-    // ---------------------------------------------------------
-
-    // Collect all the rules that have declarations that use variables
-    var rulesThatHaveDeclarationsWithVariablesList = [];
-    ast.walkRules(function(rule) {
-        var doesRuleUseVariables = rule.nodes.some(function(node) {
-            if(node.type === 'decl') {
-                var decl = node;
-                // If it uses variables
-                // and is not a variable declarations that we may be preserving from earlier
-                if(resolveValue.RE_VAR_FUNC.test(decl.value) && !utils.isItCustomVariableDeclaration(decl)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-
-        if(doesRuleUseVariables) {
-            rulesThatHaveDeclarationsWithVariablesList.push(rule);
-        }
-    });
-
-    rulesThatHaveDeclarationsWithVariablesList.forEach(function(rule) {
+    rulesThatUsesDeclarationsList.forEach(function(rule) {
         var rulesToWorkOn = [].concat(rule);
         // Split out the rule into each comma separated selector piece
         // We only need to split if is actually comma separted(selectors > 1)
