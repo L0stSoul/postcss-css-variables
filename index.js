@@ -15,8 +15,6 @@ var resolveDecl = require('./lib/resolve-decl');
 var resolveValue = require('./lib/resolve-value');
 var collectVarsDeclarations = require('./lib/collect-vars-declarations');
 
-
-
 var defaults = {
     preserve: false
 };
@@ -27,9 +25,7 @@ module.exports = postcss.plugin('postcss-css-variables', function(options) {
 
 function transformAST(options, ast, result) {
     // Map of variable names to a list of declarations
-    var map = {};
-
-    map = collectVarsDeclarations(options, ast);
+    var customVarsDeclarations = collectVarsDeclarations(options, ast);
 
     // Resolve variables everywhere
     // ---------------------------------------------------------
@@ -77,39 +73,11 @@ function transformAST(options, ast, result) {
             ruleToWorkOn.nodes.slice(0).forEach(function(node) {
                 if(node.type === 'decl') {
                     var decl = node;
-                    resolveDecl(decl, map, options.preserve);
+                    resolveDecl(decl, customVarsDeclarations, options.preserve);
                 }
             });
         });
 
     });
 
-
-
-
-
-}
-
-
-
-
-
-function cleanUpNode(node) {
-    // If we removed all of the declarations in the rule(making it empty),
-    // then just remove it
-    var nodeToPossiblyCleanUp = node;
-    while(nodeToPossiblyCleanUp && nodeToPossiblyCleanUp.nodes.length <= 0) {
-        var nodeToRemove = nodeToPossiblyCleanUp.type !== 'root' ? nodeToPossiblyCleanUp : null;
-
-        if(nodeToRemove) {
-            // Get a reference to it before we remove
-            // and lose reference to the child after removing it
-            nodeToPossiblyCleanUp = nodeToRemove.parent;
-
-            nodeToRemove.remove();
-        }
-        else {
-            nodeToPossiblyCleanUp = null;
-        }
-    }
 }
