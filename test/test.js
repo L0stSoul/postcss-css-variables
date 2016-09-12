@@ -143,25 +143,6 @@ describe('postcss-css-variables', function() {
 	test('should work with variables that try to self reference and fallback properly', 'self-reference-fallback');
 	test('should work with circular reference', 'circular-reference');
 
-
-	describe('with `options.variables`', function() {
-		test(
-			'should work with JS defined variables',
-			'js-defined',
-			{
-				variables: {
-					'--js-defined1': '75px',
-					'--js-defined2': {
-						value: '80px'
-					},
-					// Should be automatically prefixed with `--`
-					'js-defined-no-prefix': '#ff0000'
-				}
-			}
-		);
-	});
-
-
 	describe('with `options.preserve`', function() {
 		test(
 			'preserves variables when `preserve` is `true`',
