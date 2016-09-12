@@ -18,8 +18,10 @@ var collectRulesThatUsesDeclarations = require('./lib/collect-rules-that-uses-de
 
 var defaults = {
     preserve: false,
-    extraVarsDeclaration: ''
+    extraVarsDeclarations: ''
 };
+
+var parseExtraVarsDeclarations = _.memoize(postcss.parse);
 
 module.exports = postcss.plugin('postcss-css-variables', function(options) {
     return _.partial(transformAST, _.defaults(options, defaults));
@@ -27,7 +29,7 @@ module.exports = postcss.plugin('postcss-css-variables', function(options) {
 
 function transformAST(options, ast, result) {
     var customVarsDeclarations = _.assign(
-            collectVarsDeclarations(options, postcss.parse(options.extraVarsDeclaration)),
+            collectVarsDeclarations(options, parseExtraVarsDeclarations(options.extraVarsDeclarations)),
             collectVarsDeclarations(options, ast)
         );
     var rulesThatUsesDeclarationsList = collectRulesThatUsesDeclarations(ast);
